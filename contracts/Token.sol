@@ -52,6 +52,7 @@ contract Token is ERC20 {
 
     function transfer(address _to, uint256 _value) public returns (bool) {
         require(_to != address(0));
+        require(_value > 0 );
         require(_value <= balances[msg.sender]);
         balances[msg.sender] = SafeMath.sub(balances[msg.sender], _value);
         balances[_to] = SafeMath.add(balances[_to], _value);
@@ -65,6 +66,7 @@ contract Token is ERC20 {
 
     function transferFrom(address _from, address _to, uint256 _value) public returns (bool) {
         require(_to != address(0));
+        require(_value > 0 );
         require(_value <= balances[_from]);
         require(_value <= allowed[_from][msg.sender]);
 
