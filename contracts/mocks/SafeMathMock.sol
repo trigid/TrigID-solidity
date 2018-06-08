@@ -1,6 +1,6 @@
 pragma solidity ^0.4.23;
 
-import "../SafeMath.sol";
+import "../math/SafeMath.sol";
 
 contract SafeMathMock {
 
