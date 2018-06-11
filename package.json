@@ -1,0 +1,23 @@
+{
+  "name": "trigid-solidity",
+  "version": "1.0.0",
+  "description": "TrigID Solidity",
+  "dependencies": {
+    "chai": "^4.1.2",
+    "chai-bignumber": "^2.0.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/trigid/TrigID-solidity.git"
+  },
+  "keywords": [
+    "solidity",
+    "ethereum"
+  ],
+  "author": "TrigID Admin <admin@trigid.org>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/trigid/TrigID-solidity/issues"
+  },
+  "homepage": "https://github.com/trigid/TrigID-solidity#readme"
+}
