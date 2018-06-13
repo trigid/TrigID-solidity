@@ -1,25 +1,27 @@
 pragma solidity ^0.4.10;
 
 import "./ERC20.sol";
+import "./Owned.sol";
+import "./ApproveAndCallFallBack.sol";
 import "../math/SafeMath.sol";
 
-contract Token is ERC20 {
-    using SafeMath for uint;
+contract Token is ERC20, Owned {
+    using SafeMath for uint256;
 
-    string internal _name;
-    string internal _symbol;
-    uint8 internal _decimals;
-    uint256 internal _totalSupply;
+    string internal _name = "TrigID";
+    string internal _symbol = "ID";
+    uint8 internal _decimals = 0;
+    uint256 internal _totalSupply = 2000000000;
+
+    // For testing only
+    uint256 public constant DRIP_AMOUNT = 1000;
 
     mapping (address => uint256) internal balances;
     mapping (address => mapping (address => uint256)) internal allowed;
 
-    constructor(string name, string symbol, uint8 decimals, uint256 totalSupply) public {
-        _symbol = symbol;
-        _name = name;
-        _decimals = decimals;
-        _totalSupply = totalSupply;
-        balances[msg.sender] = totalSupply;
+    constructor() public {
+        balances[owner] = _totalSupply;
+        emit Transfer(address(0), owner, _totalSupply);
     }
 
     function name()
@@ -47,7 +49,14 @@ contract Token is ERC20 {
     public
     view
     returns (uint256) {
-        return _totalSupply;
+        return SafeMath.sub(_totalSupply, balances[address(0)]);
+    }
+
+    // For testing only
+    function drip() public {
+        balances[owner] = balances[owner].sub(DRIP_AMOUNT);
+        balances[msg.sender] = balances[msg.sender].add(DRIP_AMOUNT);
+        emit Transfer(owner, msg.sender, DRIP_AMOUNT);
     }
 
     function transfer(address _to, uint256 _value) public returns (bool) {
@@ -87,20 +96,20 @@ contract Token is ERC20 {
         return allowed[_owner][_spender];
     }
 
-    function increaseApproval(address _spender, uint _addedValue) public returns (bool) {
+    function increaseApproval(address _spender, uint256 _addedValue, bytes data) public returns (bool) {
         allowed[msg.sender][_spender] = SafeMath.add(allowed[msg.sender][_spender], _addedValue);
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+        ApproveAndCallFallBack(_spender).receiveApproval(msg.sender, _addedValue, this, data);
         return true;
     }
 
-    function decreaseApproval(address _spender, uint _subtractedValue) public returns (bool) {
-        uint oldValue = allowed[msg.sender][_spender];
-        if (_subtractedValue > oldValue) {
-            allowed[msg.sender][_spender] = 0;
-        } else {
-            allowed[msg.sender][_spender] = SafeMath.sub(oldValue, _subtractedValue);
-        }
-        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-        return true;
+    // Don't accept ETH
+    function () public payable {
+        revert();
+    }
+
+    // Owner can transfer out any accidentally sent ERC20 tokens
+    function transferAnyERC20Token(address tokenAddress, uint tokens) public onlyOwner returns (bool success) {
+        return ERC20(tokenAddress).transfer(owner, tokens);
     }
 }
