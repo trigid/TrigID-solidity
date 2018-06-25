@@ -16,8 +16,7 @@ contract Auction {
         AuctionDeployed,
         AuctionSetUp,
         AuctionStarted,
-        AuctionEnded,
-        TradingStarted
+        AuctionEnded
     }
 
     Token public trigIDToken;
@@ -26,35 +25,30 @@ contract Auction {
     address public owner;
     uint256 public priceFactor;
     uint256 public totalBid;
+    address public highestBidder;
+    uint256 public highestBid;
 
-    mapping (address => Bid[]) public bids;
+    mapping (address => Bid) public bids;
 
     event BidSubmission(address indexed sender, uint256 amount);
 
     modifier atStage(Stages _stage) {
-        if (stage != _stage)
-        // Contract not in expected state
-            throw;
+        require(stage == _stage);
         _;
     }
 
     modifier isOwner() {
-        if (msg.sender != owner)
-        // Only owner is allowed to proceed
-            throw;
+        require(msg.sender == owner);
         _;
     }
 
     modifier isWallet() {
-        if (msg.sender != wallet)
-        // Only wallet is allowed to proceed
-            throw;
+        require(msg.sender == wallet);
         _;
     }
 
     modifier isValidPayload() {
-        if (msg.data.length != 4 && msg.data.length != 36)
-            throw;
+        require (msg.data.length == 4 || msg.data.length == 36);
         _;
     }
 
@@ -86,7 +80,6 @@ contract Auction {
     atStage(Stages.AuctionSetUp)
     {
         stage = Stages.AuctionStarted;
-        startBlock = block.number;
     }
 
     /// @dev Changes auction price factor before auction is started.
@@ -115,32 +108,32 @@ contract Auction {
     isValidPayload
     atStage(Stages.AuctionStarted)
     {
+        require(_blindedBid != 0);
+        require(bids[msg.sender].blindedBid.length == 0);
         uint256 amount = calcTokenPrice();
         if (amount >= HARD_CAP) {
             finalizeAuction();
         }
-        bids[msg.sender].push(Bid({blindedBid: _blindedBid, deposit: msg.value}));
+        bids[msg.sender] = Bid({blindedBid: _blindedBid, deposit: msg.value});
         totalBid += msg.value;
         emit BidSubmission(msg.sender, msg.value);
     }
 
-    function reveal(uint256[] _values, bool[] _fake, bytes32[] _secret)
+    function reveal(uint256 _value, bool _fake, bytes32 _secret)
     public
     atStage(Stages.AuctionEnded)
     {
-        uint256 length = bids[msg.sender].length;
-        require(_values.length == length);
-        require(_fake.length == length);
-        require(_secret.length == length);
+        require(_value != 0);
+        require(_fake == false || _fake == true);
+        require(_secret != 0);
 
-        for (uint8 i = 0; i < length; i++) {
-            Bid storage bid = bids[msg.sender][i];
-            (uint256 value, bool fake, bytes32 secret) = (_values[i], _fake[i], _secret[i]);
-            if (fake && bid.blindedBid != keccak256(value, fake, secret)) {
-                bid.blindedBid = bytes32(0);
-            }
+        require(bids[msg.sender].blindedBid == keccak256(abi.encodePacked(_value, _fake, _secret)));
+        require(bids[msg.sender].deposit == _value);
+
+        if(_value > highestBid) {
+            highestBidder = msg.sender;
+            highestBid = _value;
         }
-        stage = Stages.TradingStarted;
     }
 
     /// @dev Claims tokens for bidder after auction.
@@ -148,10 +141,11 @@ contract Auction {
     function claimTokens(address receiver)
     public
     isValidPayload
-    atStage(Stages.TradingStarted)
+    atStage(Stages.AuctionEnded)
     {
-        uint256 tokenCount = bids[receiver];
-        bids[receiver] = 0;
+        uint256 tokenCount = bids[receiver].deposit;
+        bids[receiver].blindedBid = bytes32(0);
+        bids[receiver].deposit = 0;
         trigIDToken.transfer(receiver, tokenCount);
     }
 
