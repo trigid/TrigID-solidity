@@ -10,6 +10,7 @@ contract Auction {
     struct Bid {
         bytes32 blindedBid;
         uint256 deposit;
+        uint256 tokenCount;
     }
 
     enum Stages {
@@ -114,7 +115,7 @@ contract Auction {
         if (amount >= HARD_CAP) {
             finalizeAuction();
         }
-        bids[msg.sender] = Bid({blindedBid: _blindedBid, deposit: msg.value});
+        bids[msg.sender] = Bid({blindedBid: _blindedBid, deposit: msg.value, tokenCount: 0});
         emit BidSubmission(msg.sender, msg.value);
     }
 
@@ -129,6 +130,7 @@ contract Auction {
         require(bids[msg.sender].blindedBid == keccak256(abi.encodePacked(_value, _fake, _secret)));
 
         totalBid = totalBid + (bids[msg.sender].deposit * _value);
+        bids[msg.sender].tokenCount = _value;
         if(_value > highestBid) {
             highestBidder = msg.sender;
             highestBid = _value;
@@ -142,9 +144,10 @@ contract Auction {
     isValidPayload
     atStage(Stages.AuctionEnded)
     {
-        uint256 tokenCount = bids[receiver].deposit;
+        uint256 tokenCount = bids[receiver].tokenCount;
         bids[receiver].blindedBid = bytes32(0);
         bids[receiver].deposit = 0;
+        bids[receiver].tokenCount = 0;
         trigIDToken.transfer(receiver, tokenCount);
     }
 
