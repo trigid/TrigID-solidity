@@ -115,7 +115,6 @@ contract Auction {
             finalizeAuction();
         }
         bids[msg.sender] = Bid({blindedBid: _blindedBid, deposit: msg.value});
-        totalBid += msg.value;
         emit BidSubmission(msg.sender, msg.value);
     }
 
@@ -128,8 +127,8 @@ contract Auction {
         require(_secret != 0);
 
         require(bids[msg.sender].blindedBid == keccak256(abi.encodePacked(_value, _fake, _secret)));
-        require(bids[msg.sender].deposit == _value);
 
+        totalBid = totalBid + (bids[msg.sender].deposit * _value);
         if(_value > highestBid) {
             highestBidder = msg.sender;
             highestBid = _value;
