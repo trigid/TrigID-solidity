@@ -110,7 +110,7 @@ contract Auction {
     atStage(Stages.AuctionStarted)
     {
         require(_blindedBid != 0);
-        require(bids[msg.sender].blindedBid.length == 0);
+        require(bids[msg.sender].blindedBid == bytes32(0));
         uint256 amount = calcTokenPrice();
         if (amount >= HARD_CAP) {
             finalizeAuction();
