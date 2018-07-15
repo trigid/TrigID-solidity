@@ -13,9 +13,6 @@ contract Token is ERC20, Owned {
     uint8 internal _decimals = 0;
     uint256 internal _totalSupply = 2000000000;
 
-    // For testing only
-    uint256 public constant DRIP_AMOUNT = 1000;
-
     mapping (address => uint256) internal balances;
     mapping (address => mapping (address => uint256)) internal allowed;
 
@@ -50,13 +47,6 @@ contract Token is ERC20, Owned {
     view
     returns (uint256) {
         return SafeMath.sub(_totalSupply, balances[address(0)]);
-    }
-
-    // For testing only
-    function drip() public {
-        balances[owner] = balances[owner].sub(DRIP_AMOUNT);
-        balances[msg.sender] = balances[msg.sender].add(DRIP_AMOUNT);
-        emit Transfer(owner, msg.sender, DRIP_AMOUNT);
     }
 
     function transfer(address _to, uint256 _value) public returns (bool) {
@@ -101,15 +91,5 @@ contract Token is ERC20, Owned {
         emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
         ApproveAndCallFallBack(_spender).receiveApproval(msg.sender, _addedValue, this, data);
         return true;
-    }
-
-    // Don't accept ETH
-    function () public payable {
-        revert();
-    }
-
-    // Owner can transfer out any accidentally sent ERC20 tokens
-    function transferAnyERC20Token(address tokenAddress, uint tokens) public onlyOwner returns (bool success) {
-        return ERC20(tokenAddress).transfer(owner, tokens);
     }
 }
