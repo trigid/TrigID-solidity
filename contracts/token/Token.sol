@@ -10,7 +10,7 @@ contract Token is ERC20, Owned {
 
     string internal _name = "TrigID";
     string internal _symbol = "ID";
-    uint8 internal _decimals = 0;
+    uint8 internal _decimals = 18;
     uint256 internal _totalSupply = 2000000000;
 
     mapping (address => uint256) internal balances;
