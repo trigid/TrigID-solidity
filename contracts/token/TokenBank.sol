@@ -14,6 +14,7 @@ contract TokenBank {
     function depositTokens(address tokenAddress, uint256 tokens) public {
         require(tokenAddress != 0 && tokens != 0);
         require(ERC20(tokenAddress).transferFrom(msg.sender, this, tokens));
+
         balances[tokenAddress][msg.sender] = balances[tokenAddress][msg.sender].add(tokens);
         emit TokensDeposited(msg.sender, tokenAddress, tokens, balances[tokenAddress][msg.sender]);
     }
@@ -22,6 +23,7 @@ contract TokenBank {
         require(tokenAddress != 0 && tokens != 0);
         require(balances[tokenAddress][msg.sender] >= tokens);
         require(ERC20(tokenAddress).transfer(msg.sender, tokens));
+
         balances[tokenAddress][msg.sender] = balances[tokenAddress][msg.sender].sub(tokens);
         emit TokensWithdrawn(msg.sender, tokenAddress, tokens, balances[tokenAddress][msg.sender]);
     }
