@@ -2,7 +2,6 @@ pragma solidity ^0.4.10;
 
 import "./ERC20.sol";
 import "./Owned.sol";
-import "./ApproveAndCallFallBack.sol";
 import "../math/SafeMath.sol";
 
 contract Token is ERC20, Owned {
@@ -11,7 +10,7 @@ contract Token is ERC20, Owned {
     string internal _name = "TrigID";
     string internal _symbol = "ID";
     uint8 internal _decimals = 18;
-    uint256 internal _totalSupply = 2000000000;
+    uint256 internal _totalSupply = 50000000 * 10**uint256(_decimals);
 
     mapping (address => uint256) internal balances;
     mapping (address => mapping (address => uint256)) internal allowed;
@@ -19,27 +18,6 @@ contract Token is ERC20, Owned {
     constructor() public {
         balances[owner] = _totalSupply;
         emit Transfer(address(0), owner, _totalSupply);
-    }
-
-    function name()
-    public
-    view
-    returns (string) {
-        return _name;
-    }
-
-    function symbol()
-    public
-    view
-    returns (string) {
-        return _symbol;
-    }
-
-    function decimals()
-    public
-    view
-    returns (uint8) {
-        return _decimals;
     }
 
     function totalSupply()
@@ -68,7 +46,6 @@ contract Token is ERC20, Owned {
         require(_value > 0 );
         require(_value <= balances[_from]);
         require(_value <= allowed[_from][msg.sender]);
-
         balances[_from] = SafeMath.sub(balances[_from], _value);
         balances[_to] = SafeMath.add(balances[_to], _value);
         allowed[_from][msg.sender] = SafeMath.sub(allowed[_from][msg.sender], _value);
@@ -84,12 +61,5 @@ contract Token is ERC20, Owned {
 
     function allowance(address _owner, address _spender) public view returns (uint256) {
         return allowed[_owner][_spender];
-    }
-
-    function increaseApproval(address _spender, uint256 _addedValue, bytes data) public returns (bool) {
-        allowed[msg.sender][_spender] = SafeMath.add(allowed[msg.sender][_spender], _addedValue);
-        emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
-        ApproveAndCallFallBack(_spender).receiveApproval(msg.sender, _addedValue, this, data);
-        return true;
     }
 }
