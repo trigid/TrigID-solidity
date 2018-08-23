@@ -1,10 +1,9 @@
 pragma solidity ^0.4.10;
 
 import "./ERC20.sol";
-import "./Owned.sol";
 import "../math/SafeMath.sol";
 
-contract Token is ERC20, Owned {
+contract Token is ERC20 {
     using SafeMath for uint256;
 
     string internal _name = "TrigID";
@@ -16,8 +15,8 @@ contract Token is ERC20, Owned {
     mapping (address => mapping (address => uint256)) internal allowed;
 
     constructor() public {
-        balances[owner] = _totalSupply;
-        emit Transfer(address(0), owner, _totalSupply);
+        balances[msg.sender] = _totalSupply;
+        emit Transfer(address(0), msg.sender, _totalSupply);
     }
 
     function totalSupply()

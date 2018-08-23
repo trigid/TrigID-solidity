@@ -1,21 +1,28 @@
-var Token = artifacts.require('./Token.sol');
+    const BigNumber = web3.BigNumber;
+    var Token = artifacts.require('./Token.sol');
 
-// Token Test
-describe('TestToken :: ', function() {
-    var contract, web3, Me, accounts;
+    require('chai')
+        .use(require('chai-bignumber')(BigNumber))
+        .should();
 
-    it('Should deploy the contract', function (done) {
-        Token.new()
-        .then(function(inst){
-            contract = inst.contract;
-            web3 = inst.constructor.web3;
-            accounts = inst.constructor.web3.eth.accounts;
-            Me = accounts[0];
+    const MAX_UINT = new BigNumber('115792089237316195423570985008687907853269984665640564039457584007913129639935');
 
-            assert.notEqual(contract.address, null, 'Contract not successfully deployed');
-            done();
+    // Token Test
+    describe('TestToken :: ', function() {
+        var contract, web3, Me, accounts;
+
+        it('Should deploy the contract', function (done) {
+            Token.new()
+            .then(function(inst){
+                contract = inst.contract;
+                web3 = inst.constructor.web3;
+                accounts = inst.constructor.web3.eth.accounts;
+                Me = accounts[0];
+
+                assert.notEqual(contract.address, null, 'Contract not successfully deployed');
+                done();
+            });
         });
-    });
 
     describe('Allocate Tokens ::',function(){
 
@@ -78,6 +85,7 @@ describe('TestToken :: ', function() {
             })
         })
 
+
         it('Should fail to spend Non-allocated tokens', function(done){
             var allowance = Number(contract.allowance.call(Me, accounts[2]));
 
@@ -133,6 +141,17 @@ describe('TestToken :: ', function() {
                     done();
             })
         })
+
+        it('Should fail to spend max tokens', function(done){
+             var oldBalance = Number(contract.balanceOf.call(accounts[2]));
+
+             contract.transfer(accounts[2], MAX_UINT, {from:Me},
+                 function(err, res){
+                     var newBalance = Number(contract.balanceOf.call(accounts[2]));
+                     assert.equal(oldBalance, newBalance, 'Address not credited with MAX token');
+                     done();
+             })
+        });
 
         it('Should successfully spend tokens', function(done){
             var oldBalance = Number(contract.balanceOf.call(accounts[2]));
