@@ -19,6 +19,27 @@ contract Token is ERC20 {
         emit Transfer(address(0), msg.sender, _totalSupply);
     }
 
+    function name()
+    public
+    view
+    returns (string) {
+        return _name;
+    }
+
+    function symbol()
+    public
+    view
+    returns (string) {
+        return _symbol;
+    }
+
+    function decimals()
+    public
+    view
+    returns (uint8) {
+        return _decimals;
+    }
+
     function totalSupply()
     public
     view
